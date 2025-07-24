@@ -1,5 +1,8 @@
 #include "op.hpp"
 #include "tensor.hpp"
+#include <helper_cuda.h>
+
+extern int cuda_add(float *h_a, float *h_b, float *h_c, int n);
 
 namespace shao {
 
@@ -14,7 +17,8 @@ std::vector<T> AddTensorOp<T>::compute(const std::vector<Tensor<T>*>& inputs) {
         }
         return result;
     } else if (device_ == Device::GPU) {
-        throw std::runtime_error("AddTensorOp: GPU not supported yet");
+        cuda_add(inputs[0]->data().data(), inputs[1]->data().data(), result.data(), result.size());
+        return result;
     } else {
         throw std::runtime_error("AddTensorOp: Invalid device");
     }

@@ -15,7 +15,7 @@ template<typename T> class Tensor;
 template<typename T>
 class Op {
 public:
-    Op(Device device) : device_(device) {}
+    Op(Device device=Device::CPU) : device_(device) {}
     virtual std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) = 0;
     virtual ~Op() = default;
 
