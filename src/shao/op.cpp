@@ -20,7 +20,6 @@ Tensor<T> AddTensorOp<T>::operator()(Tensor<T>& a, Tensor<T>& b) {
     new_tensor.op_ = std::make_shared<AddTensorOp<T>>();
     new_tensor.inputs_.push_back(&a);
     new_tensor.inputs_.push_back(&b);
-    new_tensor.realize();  // eager execution
     return new_tensor;
 }
 

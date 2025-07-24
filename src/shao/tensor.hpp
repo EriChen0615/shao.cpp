@@ -15,8 +15,12 @@ public:
     Tensor(std::initializer_list<T> data);
     Tensor() = default;
 
-    const std::vector<T>& data() const { return cached_data_; }
-    std::vector<T>& mutable_data() { return cached_data_; }
+    const std::vector<T>& data() const {
+        if (op_ && cached_data_.empty()) {
+            const_cast<Tensor*>(this)->realize();
+        }
+        return cached_data_;
+    }
 
     void realize();
 

@@ -9,6 +9,11 @@ Tensor<T>::Tensor(std::initializer_list<T> data) : cached_data_(data), op_(nullp
 template<typename T>
 void Tensor<T>::realize() {
     if (op_ && cached_data_.empty()) {
+        // Compute all inputs first
+        for (auto* input : inputs_) {
+            input->realize();
+        }
+        // Then compute this tensor
         cached_data_ = op_->compute(inputs_);
     }
 }
