@@ -13,6 +13,7 @@ template<typename T>
 class Tensor {
 public:
     Tensor(std::initializer_list<T> data);
+    Tensor(const std::vector<T>& data);
     Tensor() = default;
 
     const std::vector<T>& data() const {

@@ -7,6 +7,9 @@ template<typename T>
 Tensor<T>::Tensor(std::initializer_list<T> data) : cached_data_(data), op_(nullptr) {}
 
 template<typename T>
+Tensor<T>::Tensor(const std::vector<T>& data) : cached_data_(data), op_(nullptr) {}
+
+template<typename T>
 void Tensor<T>::realize() {
     if (op_ && cached_data_.empty()) {
         // Compute all inputs first

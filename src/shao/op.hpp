@@ -19,13 +19,14 @@ public:
     virtual std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) = 0;
     virtual ~Op() = default;
 
-private:
+protected:
     Device device_;
 };
 
 template<typename T>
 class AddTensorOp : public Op<T> {
 public:
+    AddTensorOp(Device device=Device::CPU) : Op<T>(device) {}
     std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
     Tensor<T> operator()(Tensor<T>& a, Tensor<T>& b);
 };
