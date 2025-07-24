@@ -16,8 +16,8 @@ int main() {
         data_b[i] = static_cast<float>(i * 2);
     }
     
-    shao::Tensor<float> a(data_a);
-    shao::Tensor<float> b(data_b);
+    shao::Tensor<float> a(data_a, shao::Device::CPU);
+    shao::Tensor<float> b(data_b, shao::Device::CPU);
 
     shao::AddTensorOp<float> add_op;
     
@@ -35,8 +35,8 @@ int main() {
             data_a[j] = static_cast<float>(i + j);
             data_b[j] = static_cast<float>((i + j) * 2);
         }
-        shao::Tensor<float> a_iter(data_a);
-        shao::Tensor<float> b_iter(data_b);
+        shao::Tensor<float> a_iter(data_a, shao::Device::CPU);
+        shao::Tensor<float> b_iter(data_b, shao::Device::CPU);
         
         auto c = add_op(a_iter, b_iter);
         

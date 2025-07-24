@@ -16,10 +16,10 @@ int main() {
         data_b[i] = static_cast<float>(i * 2);
     }
     
-    shao::Tensor<float> a(data_a);
-    shao::Tensor<float> b(data_b);
+    shao::Tensor<float> a(data_a, shao::Device::GPU);
+    shao::Tensor<float> b(data_b, shao::Device::GPU);
 
-    shao::AddTensorOp<float> add_op(shao::Device::GPU);
+    shao::AddTensorOp<float> add_op;
     
     // Warm up
     auto warmup = add_op(a, b);
@@ -35,8 +35,8 @@ int main() {
             data_a[j] = static_cast<float>(i + j);
             data_b[j] = static_cast<float>((i + j) * 2);
         }
-        shao::Tensor<float> a_iter(data_a);
-        shao::Tensor<float> b_iter(data_b);
+        shao::Tensor<float> a_iter(data_a, shao::Device::GPU);
+        shao::Tensor<float> b_iter(data_b, shao::Device::GPU);
         
         auto c = add_op(a_iter, b_iter);
         
