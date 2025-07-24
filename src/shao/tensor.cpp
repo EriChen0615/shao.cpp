@@ -11,8 +11,8 @@ template<typename T>
 Tensor<T>::Tensor(std::initializer_list<T> data, Device device)
     : cached_data_(data), device_(device), op_(nullptr), cached_data_is_stale_(false), size_(data.size()) {
     if (device_ == Device::CUDA) {
-        allocate_gpu_memory();
-        copy_to_gpu();
+        allocate_cuda_memory();
+        copy_to_cuda();
         cached_data_is_stale_ = true;  // CPU cache is now stale
     }
 }
@@ -21,8 +21,8 @@ template<typename T>
 Tensor<T>::Tensor(const std::vector<T>& data, Device device)
     : cached_data_(data), device_(device), op_(nullptr), cached_data_is_stale_(false), size_(data.size()) {
     if (device_ == Device::CUDA) {
-        allocate_gpu_memory();
-        copy_to_gpu();
+        allocate_cuda_memory();
+        copy_to_cuda();
         cached_data_is_stale_ = true;  // CPU cache is now stale
     }
 }
@@ -30,7 +30,7 @@ Tensor<T>::Tensor(const std::vector<T>& data, Device device)
 template<typename T>
 Tensor<T>::~Tensor() {
     if (device_ == Device::CUDA) {
-        free_gpu_memory();
+        free_cuda_memory();
     }
 }
 
@@ -45,7 +45,7 @@ void Tensor<T>::realize() {
         if (device_ == Device::CUDA) {
             // CUDA computation - ensure we have memory allocated
             if (!d_data_ptr_) {
-                allocate_gpu_memory();
+                allocate_cuda_memory();
             }
             
             // Tell operation to compute into our pre-allocated memory
@@ -66,15 +66,15 @@ void Tensor<T>::to_device(Device target_device) {
     if (target_device == Device::CUDA) {
         // Moving to CUDA
         if (!d_data_ptr_) {
-            allocate_gpu_memory();
+            allocate_cuda_memory();
         }
-        copy_to_gpu();
+        copy_to_cuda();
         device_ = Device::CUDA;
     } else {
         // Moving to CPU
         if (d_data_ptr_) {
-            copy_from_gpu();
-            free_gpu_memory();
+            copy_from_cuda();
+            free_cuda_memory();
         }
         device_ = Device::CPU;
         cached_data_is_stale_ = false;  // CPU cache is now fresh
@@ -82,13 +82,13 @@ void Tensor<T>::to_device(Device target_device) {
 }
 
 template<typename T>
-void Tensor<T>::allocate_gpu_memory() {
+void Tensor<T>::allocate_cuda_memory() {
     if (size_ == 0) return;
     checkCudaErrors(cudaMalloc((void**)&d_data_ptr_, size_ * sizeof(T)));
 }
 
 template<typename T>
-void Tensor<T>::free_gpu_memory() {
+void Tensor<T>::free_cuda_memory() {
     if (d_data_ptr_) {
         checkCudaErrors(cudaFree(d_data_ptr_));
         d_data_ptr_ = nullptr;
@@ -96,14 +96,14 @@ void Tensor<T>::free_gpu_memory() {
 }
 
 template<typename T>
-void Tensor<T>::copy_to_gpu() {
+void Tensor<T>::copy_to_cuda() {
     if (cached_data_.empty() || !d_data_ptr_ || size_ == 0) return;
     checkCudaErrors(cudaMemcpy(d_data_ptr_, cached_data_.data(), 
                                size_ * sizeof(T), cudaMemcpyHostToDevice));
 }
 
 template<typename T>
-void Tensor<T>::copy_from_gpu() {
+void Tensor<T>::copy_from_cuda() {
     if (!d_data_ptr_ || size_ == 0) return;
     
     // Resize cached_data_ if needed

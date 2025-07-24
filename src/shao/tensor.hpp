@@ -29,7 +29,7 @@ public:
         
         // If data is on CUDA and CPU cache is stale, copy from CUDA
         if (device_ == Device::CUDA && d_data_ptr_ && cached_data_is_stale_) {
-            copy_from_gpu();
+            copy_from_cuda();
             cached_data_is_stale_ = false;
         }
         
@@ -47,10 +47,10 @@ public:
 
 protected:
     // Helper methods for CUDA memory management (accessible to ops)
-    void allocate_gpu_memory();
-    void free_gpu_memory();
-    void copy_to_gpu();
-    void copy_from_gpu();
+    void allocate_cuda_memory();
+    void free_cuda_memory();
+    void copy_to_cuda();
+    void copy_from_cuda();
 
 private:
     std::shared_ptr<Op<T>> op_ = nullptr;
