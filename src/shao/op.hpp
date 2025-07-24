@@ -15,6 +15,11 @@ public:
     Op() = default;
     virtual std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) = 0;
     virtual void compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) = 0;
+    
+    // Automatic differentiation: compute partial derivative ∂to_tensor/∂from_tensor
+    // Returns: partial_derivative = ∂to_tensor/∂from_tensor
+    virtual std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) = 0;
+    
     virtual ~Op() = default;
 
 protected:
@@ -39,6 +44,26 @@ class AddTensorOp : public Op<T> {
 public:
     std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
     void compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) override;
+    std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) override;
+    Tensor<T> operator()(Tensor<T>& a, Tensor<T>& b);
+};
+
+template<typename T>
+class SumTensorOp : public Op<T> {
+public:
+    std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
+    void compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) override;
+    std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) override;
+    Tensor<T> operator()(const std::vector<Tensor<T>*>& tensors);
+    Tensor<T> operator()(const std::vector<std::shared_ptr<Tensor<T>>>& tensors);
+};
+
+template<typename T>
+class MulTensorOp : public Op<T> {
+public:
+    std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
+    void compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) override;
+    std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) override;
     Tensor<T> operator()(Tensor<T>& a, Tensor<T>& b);
 };
 
