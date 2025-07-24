@@ -22,15 +22,15 @@ public:
     Tensor() = default;
     ~Tensor();
 
-    const std::vector<T>& data() const {
+    std::vector<T>& data() {
         if (op_ && cached_data_.empty()) {
-            const_cast<Tensor*>(this)->realize();
+            realize();
         }
         
         // If data is on CUDA and CPU cache is stale, copy from CUDA
         if (device_ == Device::CUDA && d_data_ptr_ && cached_data_is_stale_) {
-            const_cast<Tensor*>(this)->copy_from_gpu();
-            const_cast<Tensor*>(this)->cached_data_is_stale_ = false;
+            copy_from_gpu();
+            cached_data_is_stale_ = false;
         }
         
         return cached_data_;
@@ -38,14 +38,6 @@ public:
 
     Device device() const { return device_; }
     
-    // CUDA data access (only valid if device_ == Device::CUDA)
-    T* gpu_data() const { 
-        if (device_ == Device::CUDA && d_data_ptr_) {
-            return d_data_ptr_; 
-        }
-        return nullptr;
-    }
-
     void realize();
     
     // Move data to specified device

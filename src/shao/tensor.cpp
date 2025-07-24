@@ -43,13 +43,13 @@ void Tensor<T>::realize() {
         }
         
         if (device_ == Device::CUDA) {
-            // CUDA computation - compute directly to CUDA memory
-            if (d_data_ptr_) {
-                free_gpu_memory(); // Free old memory before re-allocating
+            // CUDA computation - ensure we have memory allocated
+            if (!d_data_ptr_) {
+                allocate_gpu_memory();
             }
-            size_t result_size;
-            d_data_ptr_ = op_->compute_cuda(inputs_, result_size);
-            size_ = result_size;  // Store the result size
+            
+            // Tell operation to compute into our pre-allocated memory
+            op_->compute_cuda(inputs_, d_data_ptr_);
             cached_data_is_stale_ = true;  // CPU cache is now stale
         } else {
             // CPU computation

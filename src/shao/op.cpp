@@ -23,7 +23,7 @@ std::vector<T> AddTensorOp<T>::compute(const std::vector<Tensor<T>*>& inputs) {
 }
 
 template<typename T>
-T* AddTensorOp<T>::compute_cuda(const std::vector<Tensor<T>*>& inputs, size_t& size) {
+void AddTensorOp<T>::compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) {
     // Validate that all inputs are on the same device
     Device device = this->validate_device_consistency(inputs);
     
@@ -33,23 +33,17 @@ T* AddTensorOp<T>::compute_cuda(const std::vector<Tensor<T>*>& inputs, size_t& s
     
     // For now, only support float for CUDA operations
     if constexpr (std::is_same_v<T, float>) {
-        size = inputs[0]->data().size();
+        size_t size = inputs[0]->data().size();
         
         // Use CUDA data if available
-        float *d_a = inputs[0]->gpu_data();
-        float *d_b = inputs[1]->gpu_data();
+        float *d_a = inputs[0]->d_data_ptr_;
+        float *d_b = inputs[1]->d_data_ptr_;
         
-        if (d_a && d_b) {
-            // Allocate CUDA memory for result
-            float *d_res;
-            checkCudaErrors(cudaMalloc((void**)&d_res, size * sizeof(float)));
-            
-            // Run CUDA kernel
-            cuda_add(d_a, d_b, d_res, size);
-            
-            return d_res;  // Return the CUDA pointer
+        if (d_a && d_b && output_ptr) {
+            // Run CUDA kernel into pre-allocated output memory
+            cuda_add(d_a, d_b, output_ptr, size);
         } else {
-            throw std::runtime_error("AddTensorOp::compute_cuda: CUDA data not available");
+            throw std::runtime_error("AddTensorOp::compute_cuda: CUDA data or output memory not available");
         }
     } else {
         throw std::runtime_error("AddTensorOp: CUDA operations only support float type");
@@ -67,11 +61,6 @@ Tensor<T> AddTensorOp<T>::operator()(Tensor<T>& a, Tensor<T>& b) {
     
     // Set the size of the result tensor (same as input size for addition)
     new_tensor.size_ = a.data().size();
-    
-    // If inputs are on CUDA, pre-allocate CUDA memory for the result
-    if (new_tensor.device_ == Device::CUDA) {
-        new_tensor.allocate_gpu_memory();
-    }
     
     return new_tensor;
 }
