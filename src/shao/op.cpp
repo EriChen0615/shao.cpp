@@ -51,7 +51,7 @@ void AddTensorOp<T>::compute_cuda(const std::vector<Tensor<T>*>& inputs, T* outp
 }
 
 template<typename T>
-std::shared_ptr<Tensor<T>> AddTensorOp<T>::partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) {
+std::shared_ptr<Tensor<T>> AddTensorOp<T>::partial_adjoint(const std::vector<Tensor<T>*>& from_tensor_list, Tensor<T>* to_tensor, size_t target_tensor_id) {
     // For addition: ∂(a + b)/∂a = 1, ∂(a + b)/∂b = 1
     // The partial derivative is 1 for any input
     
@@ -111,7 +111,7 @@ void SumTensorOp<T>::compute_cuda(const std::vector<Tensor<T>*>& inputs, T* outp
 }
 
 template<typename T>
-std::shared_ptr<Tensor<T>> SumTensorOp<T>::partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) {
+std::shared_ptr<Tensor<T>> SumTensorOp<T>::partial_adjoint(const std::vector<Tensor<T>*>& from_tensor_list, Tensor<T>* to_tensor, size_t target_tensor_id) {
     // For sum: ∂(sum)/∂input = 1 for each input
     // The partial derivative is 1 for any input
     
@@ -221,28 +221,26 @@ void MulTensorOp<T>::compute_cuda(const std::vector<Tensor<T>*>& inputs, T* outp
 }
 
 template<typename T>
-std::shared_ptr<Tensor<T>> MulTensorOp<T>::partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) {
+std::shared_ptr<Tensor<T>> MulTensorOp<T>::partial_adjoint(const std::vector<Tensor<T>*>& from_tensor_list, Tensor<T>* to_tensor, size_t target_tensor_id) {
     // For multiplication: ∂(a * b)/∂a = b, ∂(a * b)/∂b = a
     // The partial derivative depends on which input we're differentiating with respect to
     
-    // Find the other input tensor
+    // Find the other input tensor (not the target_tensor_id)
     Tensor<T>* other_tensor = nullptr;
-    for (auto* input : to_tensor->inputs_) {
-        if (input != from_tensor) {
+    for (auto* input : from_tensor_list) {
+        if (input->id() != target_tensor_id) {
             other_tensor = input;
             break;
         }
     }
     
-    if (!other_tensor) {
-        throw std::runtime_error("MulTensorOp::partial_adjoint: Could not find other input tensor");
+    if (other_tensor) {
+        // Create a shared_ptr that doesn't own the tensor (just references it)
+        // This is safe because the tensor will outlive this operation
+        return std::shared_ptr<Tensor<T>>(other_tensor, [](Tensor<T>*) {});
+    } else {
+        throw std::runtime_error("MulTensorOp::partial_adjoint: Could not find other tensor");
     }
-    
-    // Return the other tensor as the partial derivative
-    const auto& other_data = other_tensor->data();
-    auto partial_derivative = std::make_shared<Tensor<T>>(other_data, to_tensor->device());
-    
-    return partial_derivative;
 }
 
 template<typename T>

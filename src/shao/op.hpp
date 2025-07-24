@@ -18,7 +18,9 @@ public:
     
     // Automatic differentiation: compute partial derivative ∂to_tensor/∂from_tensor
     // Returns: partial_derivative = ∂to_tensor/∂from_tensor
-    virtual std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) = 0;
+    // from_tensor_list: all input tensors to the operation
+    // target_tensor_id: ID of the tensor to differentiate with respect to
+    virtual std::shared_ptr<Tensor<T>> partial_adjoint(const std::vector<Tensor<T>*>& from_tensor_list, Tensor<T>* to_tensor, size_t target_tensor_id) = 0;
     
     virtual ~Op() = default;
 
@@ -44,7 +46,7 @@ class AddTensorOp : public Op<T> {
 public:
     std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
     void compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) override;
-    std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) override;
+    std::shared_ptr<Tensor<T>> partial_adjoint(const std::vector<Tensor<T>*>& from_tensor_list, Tensor<T>* to_tensor, size_t target_tensor_id) override;
     Tensor<T> operator()(Tensor<T>& a, Tensor<T>& b);
 };
 
@@ -53,7 +55,7 @@ class SumTensorOp : public Op<T> {
 public:
     std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
     void compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) override;
-    std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) override;
+    std::shared_ptr<Tensor<T>> partial_adjoint(const std::vector<Tensor<T>*>& from_tensor_list, Tensor<T>* to_tensor, size_t target_tensor_id) override;
     Tensor<T> operator()(const std::vector<Tensor<T>*>& tensors);
     Tensor<T> operator()(const std::vector<std::shared_ptr<Tensor<T>>>& tensors);
 };
@@ -63,7 +65,7 @@ class MulTensorOp : public Op<T> {
 public:
     std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
     void compute_cuda(const std::vector<Tensor<T>*>& inputs, T* output_ptr) override;
-    std::shared_ptr<Tensor<T>> partial_adjoint(Tensor<T>* from_tensor, Tensor<T>* to_tensor) override;
+    std::shared_ptr<Tensor<T>> partial_adjoint(const std::vector<Tensor<T>*>& from_tensor_list, Tensor<T>* to_tensor, size_t target_tensor_id) override;
     Tensor<T> operator()(Tensor<T>& a, Tensor<T>& b);
 };
 

@@ -210,9 +210,17 @@ void Tensor<T>::backward() {
 
         // Step 2. Compute partial adjoints for all input tensors
         for (auto input_tensor : cur_tensor->inputs_) {
-            auto partial_adjoint = cur_tensor->op_->partial_adjoint(input_tensor, cur_tensor); // compute partial derivative
-            // TODO: Multiply partial_derivative by cur_tensor->grad_ to get the full adjoint
-            id_to_adjoints_map[input_tensor->id()].push_back(partial_adjoint);
+            auto partial_adjoint = cur_tensor->op_->partial_adjoint(cur_tensor->inputs_, cur_tensor, input_tensor->id()); // compute partial derivative
+            
+            // Apply chain rule: multiply partial_adjoint by cur_tensor->grad_ to get the full adjoint
+            if (cur_tensor->grad_) {
+                auto full_adjoint = multiply_tensors(cur_tensor->grad_, partial_adjoint);
+                full_adjoint->realize();
+                id_to_adjoints_map[input_tensor->id()].push_back(full_adjoint);
+            } else {
+                // If no gradient, just use the partial adjoint (for leaf nodes)
+                id_to_adjoints_map[input_tensor->id()].push_back(partial_adjoint);
+            }
         }
     }
 }
