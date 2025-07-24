@@ -5,15 +5,22 @@
 
 namespace shao {
 
+enum class Device {
+    CPU,
+    GPU
+};
 // Forward declaration
 template<typename T> class Tensor;
 
 template<typename T>
 class Op {
 public:
-    Op() = default;
+    Op(Device device) : device_(device) {}
     virtual std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) = 0;
     virtual ~Op() = default;
+
+private:
+    Device device_;
 };
 
 template<typename T>

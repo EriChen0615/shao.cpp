@@ -5,13 +5,19 @@ namespace shao {
 
 template<typename T>
 std::vector<T> AddTensorOp<T>::compute(const std::vector<Tensor<T>*>& inputs) {
+    if (device_ == Device::CPU) {
     const auto& v1 = inputs[0]->data();
     const auto& v2 = inputs[1]->data();
     std::vector<T> result(v1.size());
     for (size_t i = 0; i < v1.size(); ++i) {
-        result[i] = v1[i] + v2[i];
+            result[i] = v1[i] + v2[i];
+        }
+        return result;
+    } else if (device_ == Device::GPU) {
+        throw std::runtime_error("AddTensorOp: GPU not supported yet");
+    } else {
+        throw std::runtime_error("AddTensorOp: Invalid device");
     }
-    return result;
 }
 
 template<typename T>
