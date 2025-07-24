@@ -16,8 +16,8 @@ int main() {
         data_b[i] = static_cast<float>(i * 2);
     }
     
-    shao::Tensor<float> a(data_a, shao::Device::GPU);
-    shao::Tensor<float> b(data_b, shao::Device::GPU);
+    shao::Tensor<float> a(data_a, shao::Device::CUDA);
+    shao::Tensor<float> b(data_b, shao::Device::CUDA);
 
     shao::AddTensorOp<float> add_op;
     
@@ -35,8 +35,8 @@ int main() {
             data_a[j] = static_cast<float>(i + j);
             data_b[j] = static_cast<float>((i + j) * 2);
         }
-        shao::Tensor<float> a_iter(data_a, shao::Device::GPU);
-        shao::Tensor<float> b_iter(data_b, shao::Device::GPU);
+        shao::Tensor<float> a_iter(data_a, shao::Device::CUDA);
+        shao::Tensor<float> b_iter(data_b, shao::Device::CUDA);
         
         auto c = add_op(a_iter, b_iter);
         
@@ -47,7 +47,7 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     
-    std::cout << "GPU: 50 iterations with " << size << "-dimensional tensors" << std::endl;
+    std::cout << "CUDA: 50 iterations with " << size << "-dimensional tensors" << std::endl;
     std::cout << "Total time: " << duration.count() << " microseconds" << std::endl;
     std::cout << "Average time per iteration: " << duration.count() / 50.0 << " microseconds" << std::endl;
     

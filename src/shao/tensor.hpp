@@ -7,7 +7,7 @@ namespace shao {
 
 enum class Device {
     CPU,
-    GPU
+    CUDA
 };
 
 // Forward declarations
@@ -27,8 +27,8 @@ public:
             const_cast<Tensor*>(this)->realize();
         }
         
-        // If data is on GPU and CPU cache is stale, copy from GPU
-        if (device_ == Device::GPU && d_data_ptr_ && cached_data_is_stale_) {
+        // If data is on CUDA and CPU cache is stale, copy from CUDA
+        if (device_ == Device::CUDA && d_data_ptr_ && cached_data_is_stale_) {
             const_cast<Tensor*>(this)->copy_from_gpu();
             const_cast<Tensor*>(this)->cached_data_is_stale_ = false;
         }
@@ -38,9 +38,9 @@ public:
 
     Device device() const { return device_; }
     
-    // GPU data access (only valid if device_ == Device::GPU)
+    // CUDA data access (only valid if device_ == Device::CUDA)
     T* gpu_data() const { 
-        if (device_ == Device::GPU && d_data_ptr_) {
+        if (device_ == Device::CUDA && d_data_ptr_) {
             return d_data_ptr_; 
         }
         return nullptr;
@@ -54,7 +54,7 @@ public:
 
 
 protected:
-    // Helper methods for GPU memory management (accessible to ops)
+    // Helper methods for CUDA memory management (accessible to ops)
     void allocate_gpu_memory();
     void free_gpu_memory();
     void copy_to_gpu();
@@ -65,8 +65,8 @@ private:
     std::vector<Tensor<T>*> inputs_;
     std::vector<T> cached_data_;
     Device device_ = Device::CPU;
-    T* d_data_ptr_ = nullptr;  // GPU memory pointer
-    bool cached_data_is_stale_ = false;  // True if CPU cache is stale (GPU data is newer)
+    T* d_data_ptr_ = nullptr;  // CUDA memory pointer
+    bool cached_data_is_stale_ = false;  // True if CPU cache is stale (CUDA data is newer)
     size_t size_ = 0;  // Size of the tensor data
 
     // Allow ops to construct tensors

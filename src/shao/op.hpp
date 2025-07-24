@@ -14,7 +14,7 @@ class Op {
 public:
     Op() = default;
     virtual std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) = 0;
-    virtual T* compute_gpu(const std::vector<Tensor<T>*>& inputs, size_t& size) = 0;
+    virtual T* compute_cuda(const std::vector<Tensor<T>*>& inputs, size_t& size) = 0;
     virtual ~Op() = default;
 
 protected:
@@ -38,7 +38,7 @@ template<typename T>
 class AddTensorOp : public Op<T> {
 public:
     std::vector<T> compute(const std::vector<Tensor<T>*>& inputs) override;
-    T* compute_gpu(const std::vector<Tensor<T>*>& inputs, size_t& size) override;
+    T* compute_cuda(const std::vector<Tensor<T>*>& inputs, size_t& size) override;
     Tensor<T> operator()(Tensor<T>& a, Tensor<T>& b);
 };
 

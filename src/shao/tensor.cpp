@@ -10,7 +10,7 @@ namespace shao {
 template<typename T>
 Tensor<T>::Tensor(std::initializer_list<T> data, Device device)
     : cached_data_(data), device_(device), op_(nullptr), cached_data_is_stale_(false), size_(data.size()) {
-    if (device_ == Device::GPU) {
+    if (device_ == Device::CUDA) {
         allocate_gpu_memory();
         copy_to_gpu();
         cached_data_is_stale_ = true;  // CPU cache is now stale
@@ -20,7 +20,7 @@ Tensor<T>::Tensor(std::initializer_list<T> data, Device device)
 template<typename T>
 Tensor<T>::Tensor(const std::vector<T>& data, Device device)
     : cached_data_(data), device_(device), op_(nullptr), cached_data_is_stale_(false), size_(data.size()) {
-    if (device_ == Device::GPU) {
+    if (device_ == Device::CUDA) {
         allocate_gpu_memory();
         copy_to_gpu();
         cached_data_is_stale_ = true;  // CPU cache is now stale
@@ -29,7 +29,7 @@ Tensor<T>::Tensor(const std::vector<T>& data, Device device)
 
 template<typename T>
 Tensor<T>::~Tensor() {
-    if (device_ == Device::GPU) {
+    if (device_ == Device::CUDA) {
         free_gpu_memory();
     }
 }
@@ -42,13 +42,13 @@ void Tensor<T>::realize() {
             input->realize();
         }
         
-        if (device_ == Device::GPU) {
-            // GPU computation - compute directly to GPU memory
+        if (device_ == Device::CUDA) {
+            // CUDA computation - compute directly to CUDA memory
             if (d_data_ptr_) {
                 free_gpu_memory(); // Free old memory before re-allocating
             }
             size_t result_size;
-            d_data_ptr_ = op_->compute_gpu(inputs_, result_size);
+            d_data_ptr_ = op_->compute_cuda(inputs_, result_size);
             size_ = result_size;  // Store the result size
             cached_data_is_stale_ = true;  // CPU cache is now stale
         } else {
@@ -63,13 +63,13 @@ template<typename T>
 void Tensor<T>::to_device(Device target_device) {
     if (device_ == target_device) return;
     
-    if (target_device == Device::GPU) {
-        // Moving to GPU
+    if (target_device == Device::CUDA) {
+        // Moving to CUDA
         if (!d_data_ptr_) {
             allocate_gpu_memory();
         }
         copy_to_gpu();
-        device_ = Device::GPU;
+        device_ = Device::CUDA;
     } else {
         // Moving to CPU
         if (d_data_ptr_) {
